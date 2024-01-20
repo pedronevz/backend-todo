@@ -13,6 +13,27 @@ export class TodoService {
             },
         });
 
+        const categoryExists = await this.prisma.category.findFirst({ // ver se a categoria ja existe
+            where: {
+                name: data.category
+            },
+        });
+        
+        let categoryName;
+
+        if (categoryExists) {
+            // se a categoria já existe, obter o ID dela
+            categoryName = categoryExists.name;
+        } else {
+            // se a categoria não existe, criar uma nova
+            await this.prisma.category.create({
+                data: {
+                    name: data.category,
+                },
+            });
+    
+        }
+        
         if (todoExists){
             throw new Error('Task já existe!');
         };
@@ -28,10 +49,26 @@ export class TodoService {
         return this.prisma.todo.findMany();
     }
 
-    async delete(task: string){
+    async findTask(id: string){
+        const idNum = parseInt(id);
+        const todoExists = this.prisma.todo.findUnique({
+            where: {
+                id: idNum
+            },
+        });
+
+        if(!todoExists){
+            throw new Error('Task não existente!');
+        };
+
+        return todoExists;
+    }
+
+    async delete(id: string){
+        const idNum = parseInt(id);
         const todoExists = await this.prisma.todo.findFirst({
             where: {
-                task
+                id: idNum
             },
         });
 
@@ -41,15 +78,16 @@ export class TodoService {
 
         return await this.prisma.todo.delete({
             where:{
-                task: task,
+                id: idNum
             },
         });
     }
-
-    async update(task: string, data: TodoDTO){
+    
+    async update(id: string, data: TodoDTO){
+        const idNum = parseInt(id);
         const todoExists = await this.prisma.todo.findFirst({
             where: {
-                task
+                id: idNum
             },
         });
 
@@ -60,7 +98,29 @@ export class TodoService {
         return await this.prisma.todo.update({
             data,
             where:{
-                task
+                id: idNum
+            },
+        });
+    }
+
+    async markDone(id: string){
+        const idNum = parseInt(id);
+        const todoExists = await this.prisma.todo.findFirst({
+            where: {
+                id: idNum
+            },
+        });
+
+        if(!todoExists){
+            throw new Error('Task não existente!');
+        };
+
+        return await this.prisma.todo.update({
+            where:{
+                id: idNum
+            },
+            data:{
+                done: !todoExists.done // muda o estado de done
             },
         });
     }

@@ -16,13 +16,25 @@ export class TodoController {
     return this.todoService.findAll();
   }
 
-  @Delete(':task')
-  async delete(@Param('task') task: string){
-    return this.todoService.delete(task);
+  @Get(':id')
+  async findTask(@Param('id') id: string){
+    return this.todoService.findTask(id);
   }
 
-  @Put(':task')
-  async update(@Param('task') task: string, @Body() data: TodoDTO){
-    return this.todoService.update(task, data);
+  @Delete(':id')
+  async delete(@Param('id') id: string){
+    return this.todoService.delete(id);
+  }
+
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() data: TodoDTO){
+    return this.todoService.update(id, data);
+  }
+
+  @Put(':id/:markdone')
+  async markDone(@Param('id') id: string){
+    return this.todoService.markDone(id);
   }
 }
+
+
