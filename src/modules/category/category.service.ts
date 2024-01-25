@@ -9,7 +9,7 @@ export class CategoryService {
     async create(data: CategoryDTO){
         const categoryExists = await this.prisma.category.findFirst({
             where: {
-                name: data.name,
+                nome: data.nome,
             },
         });
 
@@ -28,10 +28,11 @@ export class CategoryService {
         return this.prisma.category.findMany();
     }
 
-    async findCategory(category: string){
+    async findCategory(id: string){
+        const idNum = parseInt(id);
         const categoryExists = this.prisma.category.findFirst({
             where: {
-                name: category
+                id: idNum
             },
         });
 
@@ -39,17 +40,14 @@ export class CategoryService {
             throw new Error('Categoria não existente!');
         };
 
-        return this.prisma.todo.findMany({
-            where: {
-                category: category
-            }
-        }); 
+        return categoryExists
     }
 
-    async delete(category: string){
+    async delete(id: string){
+        const idNum = parseInt(id);
         const categoryExists = await this.prisma.category.findFirst({
             where: {
-                name: category
+                id: idNum
             },
         });
 
@@ -59,15 +57,16 @@ export class CategoryService {
 
         return await this.prisma.category.delete({
             where:{
-                name: category,
+                id: idNum
             },
         });
     }
 
-    async update(category: string, data: CategoryDTO){
+    async update(id: string, category: CategoryDTO){
+        const idNum = parseInt(id);
         const categoryExists = await this.prisma.category.findFirst({
             where: {
-                name: category
+                id: idNum
             },
         });
 
@@ -76,9 +75,11 @@ export class CategoryService {
         };
 
         return await this.prisma.category.update({
-            data,
             where:{
-                name: category
+                id: idNum
+            },
+            data:{
+                nome: category.nome
             },
         });
     }

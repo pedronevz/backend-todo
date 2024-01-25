@@ -9,31 +9,10 @@ export class TodoService {
     async create(data: TodoDTO){
         const todoExists = await this.prisma.todo.findFirst({
             where: {
-                task: data.task,
+                nome: data.nome,
             },
         });
 
-        const categoryExists = await this.prisma.category.findFirst({ // ver se a categoria ja existe
-            where: {
-                name: data.category
-            },
-        });
-        
-        let categoryName;
-
-        if (categoryExists) {
-            // se a categoria já existe, obter o ID dela
-            categoryName = categoryExists.name;
-        } else {
-            // se a categoria não existe, criar uma nova
-            await this.prisma.category.create({
-                data: {
-                    name: data.category,
-                },
-            });
-    
-        }
-        
         if (todoExists){
             throw new Error('Task já existe!');
         };
@@ -120,7 +99,7 @@ export class TodoService {
                 id: idNum
             },
             data:{
-                done: !todoExists.done // muda o estado de done
+                isActive: !todoExists.isActive // muda o estado de done
             },
         });
     }

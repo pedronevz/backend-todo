@@ -1,6 +1,7 @@
 import { Controller, Body, Post, Get, Delete, Put, Param } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CategoryDTO } from './category.dto';
+import { category } from '@prisma/client';
 
 @Controller('category')
 export class CategoryController {
@@ -16,19 +17,19 @@ export class CategoryController {
     return this.categoryService.findAll();
   }
 
-  @Get(':category')
-  async findCategory(@Param('category') category: string){
-    return this.categoryService.findCategory(category);
+  @Get(':id')
+  async findCategory(@Param('id') id: string){
+    return this.categoryService.findCategory(id);
   }
 
-  @Delete(':category')
-  async delete(@Param('category') category: string){
-    return this.categoryService.delete(category);
+  @Delete(':id')
+  async delete(@Param('id') id: string){
+    return this.categoryService.delete(id);
   }
 
-  @Put(':category')
-  async update(@Param('category') category: string, @Body() data: CategoryDTO){
-    return this.categoryService.update(category, data);
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() category: CategoryDTO){
+    return this.categoryService.update(id, category);
   }
   
 }
