@@ -30,11 +30,8 @@ export class TodoController {
   async update(@Param('id') id: string, @Body() data: TodoDTO){
     return this.todoService.update(id, data);
   }
-
-  @Put(':id/:markdone')
-  async markDone(@Param('id') id: string){
-    return this.todoService.markDone(id);
-  }
+  
 }
+
 
 
