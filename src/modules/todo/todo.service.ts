@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { TodoDTO } from './todo.dto';
 import { PrismaService } from 'src/database/PrismaService';
-import { todo } from 'node:test';
 
 @Injectable()
 export class TodoService {
@@ -46,10 +45,27 @@ export class TodoService {
             return todosSemCategoriaId;
         });
 
-        return this.excludeCategoriaId(todosSemCategoriaId)
+        return todosSemCategoriaId
+        
     }
 
     async findTask(id: string){
+        if (id === "completas"){
+            const todoExists = await this.prisma.todo.findMany({
+                where: {
+                    isActive: false
+                },
+            });
+
+            if(todoExists.length === 0){
+                const notFoundError = new Error('Nenhuma tarefa está completa!');
+                notFoundError['statusCode'] = 404;
+                throw notFoundError;
+            };
+
+            return todoExists
+        }
+
         const idNum = parseInt(id);
 
         if (isNaN(idNum) || idNum <= 0) { // checar validade do ID => NaN = Not a Number
@@ -82,43 +98,65 @@ export class TodoService {
     }
     
     async delete(id: string){
-        const idNum = parseInt(id);
-
-        if (isNaN(idNum) || idNum <= 0) { // checar validade do ID => NaN = Not a Number
-            const idInvalido = new Error('ID inválido!');
-            idInvalido['statusCode'] = 400;
-            throw idInvalido;
+        if (id === "limpar-completas"){ 
+            const todoExists = await this.prisma.todo.findMany({
+                where: {
+                    isActive: false
+                },
+            });
+    
+            if(!todoExists){
+                const notFoundError = new Error('Nenhuma tarefa está completa!');
+                notFoundError['statusCode'] = 404;
+                throw notFoundError;
+            };
+    
+            return await this.prisma.todo.deleteMany({
+                where:{
+                    isActive: false
+                },
+            });
         }
 
-        const todoExists = await this.prisma.todo.findFirst({
-            where: {
-                id: idNum
-            },
-        });
+        else{
+            const idNum = parseInt(id);
 
-        if(!todoExists){
-            const notFoundError = new Error('Task não existente!');
-            notFoundError['statusCode'] = 404;
-            throw notFoundError;
-        };
+            if (isNaN(idNum) || idNum <= 0) { // checar validade do ID => NaN = Not a Number
+                const idInvalido = new Error('ID inválido!');
+                idInvalido['statusCode'] = 400;
+                throw idInvalido;
+            }
 
-        const todoDel = await this.prisma.todo.delete({
-            include: {
-                categoria: {
-                  select: {
-                    id: true,
-                    nome: true,
-                  },
+            const todoExists = await this.prisma.todo.findFirst({
+                where: {
+                    id: idNum
                 },
-              },
-            where:{
-                id: idNum
-            },
-        });
+            });
 
-        return this.excludeCategoriaId(todoDel)
+            if(!todoExists){
+                const notFoundError = new Error('Task não existente!');
+                notFoundError['statusCode'] = 404;
+                throw notFoundError;
+            };
+
+            const todoDel = await this.prisma.todo.delete({
+                include: {
+                    categoria: {
+                    select: {
+                        id: true,
+                        nome: true,
+                    },
+                    },
+                },
+                where:{
+                    id: idNum
+                },
+            });
+
+            return this.excludeCategoriaId(todoDel)
+        }
     }
-    
+
     async update(id: string, data: TodoDTO){
         const idNum = parseInt(id);
 

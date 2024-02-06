@@ -30,21 +30,13 @@ export class CategoryService {
 
     async findCategory(id: string){
         const idNum = parseInt(id);
-        const categoryExists = this.prisma.category.findFirst({
-            where: {
-                id: idNum
-            },
-        });
 
-        if(!categoryExists){
-            throw new Error('Categoria não existente!');
-        };
+        if (isNaN(idNum) || idNum <= 0) { // checar validade do ID => NaN = Not a Number
+            const idInvalido = new Error('ID inválido!');
+            idInvalido['statusCode'] = 400;
+            throw idInvalido;
+        }
 
-        return categoryExists
-    }
-
-    async delete(id: string){
-        const idNum = parseInt(id);
         const categoryExists = await this.prisma.category.findFirst({
             where: {
                 id: idNum
@@ -52,7 +44,33 @@ export class CategoryService {
         });
 
         if(!categoryExists){
-            throw new Error('Categoria não existente!');
+            const notFoundError = new Error('Cartegoria não existente!');
+            notFoundError['statusCode'] = 404;
+            throw notFoundError;
+        };
+
+        return categoryExists
+    }
+
+    async delete(id: string){
+        const idNum = parseInt(id);
+
+        if (isNaN(idNum) || idNum <= 0) { // checar validade do ID => NaN = Not a Number
+            const idInvalido = new Error('ID inválido!');
+            idInvalido['statusCode'] = 400;
+            throw idInvalido;
+        }
+
+        const categoryExists = await this.prisma.category.findFirst({
+            where: {
+                id: idNum
+            },
+        });
+
+        if(!categoryExists){
+            const notFoundError = new Error('Categoria não existente!');
+            notFoundError['statusCode'] = 404;
+            throw notFoundError;
         };
 
         return await this.prisma.category.delete({
@@ -64,6 +82,13 @@ export class CategoryService {
 
     async update(id: string, category: CategoryDTO){
         const idNum = parseInt(id);
+
+        if (isNaN(idNum) || idNum <= 0) { // checar validade do ID => NaN = Not a Number
+            const idInvalido = new Error('ID inválido!');
+            idInvalido['statusCode'] = 400;
+            throw idInvalido;
+        }
+
         const categoryExists = await this.prisma.category.findFirst({
             where: {
                 id: idNum
@@ -71,7 +96,9 @@ export class CategoryService {
         });
 
         if(!categoryExists){
-            throw new Error('Categoria não existente!');
+            const notFoundError = new Error('Categoria não existente!');
+            notFoundError['statusCode'] = 404;
+            throw notFoundError;
         };
 
         return await this.prisma.category.update({
