@@ -1,13 +1,13 @@
-import { Controller, Body, Post, Get, Delete, Put, Param } from '@nestjs/common';
+import { Controller, Body, Post, Get, Delete, Put, Param, UsePipes, ValidationPipe  } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CategoryDTO } from './category.dto';
-import { category } from '@prisma/client';
 
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
+  @UsePipes(new ValidationPipe())
   async create(@Body() data: CategoryDTO){
     return this.categoryService.create(data);
   };

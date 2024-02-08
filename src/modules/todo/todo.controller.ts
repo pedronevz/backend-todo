@@ -1,12 +1,14 @@
-import { Body, Controller, Post, Get, Delete, Param, Put } from '@nestjs/common';
+import { Body, Controller, Post, Get, Delete, Param, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { TodoService } from './todo.service';
 import { TodoDTO } from './todo.dto';
+import { TodoUpdateDTO } from './todoUpdate.dto';
 
 @Controller('todo')
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
   @Post()
+  @UsePipes(new ValidationPipe())
   async create(@Body() data: TodoDTO){
     return this.todoService.create(data);
   }
@@ -21,13 +23,19 @@ export class TodoController {
     return this.todoService.findTask(id);
   }
 
+  @Get('categoria/:id')
+  async findTaskByCategory(@Param('id') id: string){
+    return this.todoService.findTaskByCategory(id);
+  }
+
   @Delete(':id')
   async delete(@Param('id') id: string){
     return this.todoService.delete(id);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() data: TodoDTO){
+  @UsePipes(new ValidationPipe())
+  async update(@Param('id') id: string, @Body() data: TodoUpdateDTO){
     return this.todoService.update(id, data);
   }
   

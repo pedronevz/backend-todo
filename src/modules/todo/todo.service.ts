@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { TodoDTO } from './todo.dto';
+import { TodoUpdateDTO } from './todoUpdate.dto';
 import { PrismaService } from 'src/database/PrismaService';
 
 @Injectable()
@@ -22,6 +23,20 @@ export class TodoService {
         if (todoExists){
             throw new Error('Task já existe!');
         };
+
+        if (data.categoriaId !== undefined){
+            const categoria = await this.prisma.category.findUnique({
+                where: {
+                    id: data.categoriaId,
+                },
+            });
+
+            if (!categoria) {
+                const notFoundError = new Error('Essa categoria não existe!');
+                notFoundError['statusCode'] = 404;
+                throw notFoundError;
+            }
+        }
 
         const todo = await this.prisma.todo.create({
             data,
@@ -51,19 +66,31 @@ export class TodoService {
 
     async findTask(id: string){
         if (id === "completas"){
-            const todoExists = await this.prisma.todo.findMany({
+            const todos = await this.prisma.todo.findMany({include: {
+                categoria: {
+                  select: {
+                    id: true,
+                    nome: true,
+                  },
+                },
+              },
                 where: {
                     isActive: false
                 },
             });
 
-            if(todoExists.length === 0){
+            if(todos.length === 0){
                 const notFoundError = new Error('Nenhuma tarefa está completa!');
                 notFoundError['statusCode'] = 404;
                 throw notFoundError;
             };
 
-            return todoExists
+            const todosSemCategoriaId = todos.map((todo) => {
+                const { categoriaId, ...todosSemCategoriaId } = todo;
+                return todosSemCategoriaId;
+            });
+
+            return todosSemCategoriaId
         }
 
         const idNum = parseInt(id);
@@ -97,6 +124,43 @@ export class TodoService {
         return this.excludeCategoriaId(todoExists)
     }
     
+    async findTaskByCategory(id: string){
+        const idNum = parseInt(id);
+
+        if (isNaN(idNum) || idNum <= 0) { // checar validade do ID => NaN = Not a Number
+            const idInvalido = new Error('ID inválido!');
+            idInvalido['statusCode'] = 400;
+            throw idInvalido;
+        }
+        
+        const todos = await this.prisma.todo.findMany({include: {
+            categoria: {
+              select: {
+                id: true,
+                nome: true,
+              },
+            },
+          },
+          where: {
+            categoriaId: idNum
+            },
+        });
+
+        if(todos.length === 0){
+            const notFoundError = new Error('Essa categoria não possui tarefas!');
+            notFoundError['statusCode'] = 404;
+            throw notFoundError;
+        };
+
+
+        const todosSemCategoriaId = todos.map((todo) => {
+            const { categoriaId, ...todosSemCategoriaId } = todo;
+            return todosSemCategoriaId;
+        });
+
+        return todosSemCategoriaId
+    }
+
     async delete(id: string){
         if (id === "limpar-completas"){ 
             const todoExists = await this.prisma.todo.findMany({
@@ -157,7 +221,7 @@ export class TodoService {
         }
     }
 
-    async update(id: string, data: TodoDTO){
+    async update(id: string, data: TodoUpdateDTO){
         const idNum = parseInt(id);
 
         if (isNaN(idNum) || idNum <= 0) { // checar validade do ID => NaN = Not a Number
